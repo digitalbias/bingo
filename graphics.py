@@ -313,7 +313,7 @@ class GraphWin(tk.Canvas):
         self.mouseY = None
         while self.mouseX == None or self.mouseY == None:
             self.update()
-            if self.isClosed(): raise GraphicsError("getMouse in closed window")
+            if self.isClosed(): break # raise GraphicsError("getMouse in closed window")
             time.sleep(.1) # give up thread
         x,y = self.toWorld(self.mouseX, self.mouseY)
         self.mouseX = None
@@ -479,7 +479,7 @@ class GraphicsObject:
         is already visible."""
 
         if self.canvas and not self.canvas.isClosed(): raise GraphicsError(OBJ_ALREADY_DRAWN)
-        if graphwin.isClosed(): raise GraphicsError("Can't draw to closed window")
+        # if graphwin.isClosed(): raise GraphicsError("Can't draw to closed window")
         self.canvas = graphwin
         self.id = self._draw(graphwin, self.config)
         graphwin.addItem(self)

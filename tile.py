@@ -41,51 +41,64 @@ class Tile:
             self.__label.setFill('red')
         else:
             self.__box.setOutline('white'), self.__box.setFill('gray')
-            self.__label.setFill('black')            
+            self.__label.setFill('black')          
 
     def show(self, __win):
         self.__box.undraw(), self.__label.undraw()
         self.__box.draw(__win), self.__label.draw(__win)
 
     def select(self, __win):
-        # Update tile and redraw
+        # Update tile and redraw on main window
         self.selected = True
         self.update(), self.show(__win)
-        # Create display window for selected tile
-        s_win = g.GraphWin('New Tile', 500, 500)
+
+        ''' Show chosen tile in a new window, positioned to the right of the main window (275, 50)'''  
+        s_win = g.GraphWin('New Tile', 500, 500)        # Generate window and display tile name 
+        s_win.master.geometry('+%d+%d' % (275, 50))     # Set position of window            
         s_win.setBackground('black')
-        # Show name of selected tile
-        s_text = g.Text(g.Point(250,250), self.name)
+        s_text = g.Text(g.Point(250,250), self.name)    # Text string containing Tile name
         s_text.setFace('arial'), s_text.setStyle('bold'), s_text.setFill('red'), s_text.setSize(36)
-        # Generate "BINGO!" button and instructions
+        # Generate and draw "BINGO!" button
         b = g.Rectangle(g.Point(0,0), g.Point(500,100))
         b.setFill('red'), b.setOutline('white'), b.setWidth(3)
         b_text = g.Text(b.getCenter(),'BINGO!')
         b_text.setFace('arial'), b_text.setStyle('bold'), b_text.setFill('black'), b_text.setSize(36)
-        alt_text = g.Text(b.getCenter(),'click anywhere to continue...')
-        alt_text.setFace('arial'), alt_text.setStyle('bold'), alt_text.setFill('white'), alt_text.setSize(16), alt_text.move(0, 300)
-        # Draw "BINGO!" button and instructions
-        b.draw(s_win), b_text.draw(s_win), alt_text.draw(s_win)
+        b.draw(s_win), b_text.draw(s_win)
+        # Show Tile name on window
         s_text.draw(s_win)
         # Wait for user to initiate click event
-        while True:
-            b_click = s_win.getMouse()
-
-            if b_click.getX() in range(0,501) and b_click.getY() in range(0,101):
+        while (s_win.mouseX == None or s_win.mouseY == None) and s_win.lastKey == '': # No mouse clicks, no key press
+            s_win.update()
+            g.time.sleep(.1) # give up thread
+        if s_win.mouseX != None and s_win.mouseY != None:   # Mouse click in location (win.mouseX, win.mouseY)
+            if (s_win.mouseX >=0 and s_win.mouseX <= 500) and (s_win.mouseY >= 0 and s_win.mouseY <= 100): # Inside the 'BINGO!' button
                 s_win.close()
                 return 'bingo'
-            else:
-                s_win.close()
-                return True
-
+            s_win.close()                   # No BINGO!. Close the window and draw again.
+        elif s_win.lastKey.lower() == 'b':  # Key 'B' or 'b' pressed
+            s_win.close()
+            return 'bingo'
+        s_win.close()                       # No BINGO!. Close the window and draw again.
 
 def draw_game(board):
     '''Generates a BINGO board with controls'''
 
+    # Generate and draw "Draw" and "Quit" buttons
+    d = g.Rectangle(g.Point(0,3), g.Point(250,53))
+    d.setFill('red'), d.setOutline('black'), d.setWidth(3)
+    d_text = g.Text(d.getCenter(),'Draw')
+    d_text.setFace('arial'), d_text.setStyle('bold'), d_text.setSize(36), d_text.setFill('black')
+    d.draw(board), d_text.draw(board)
+
+    q = g.Rectangle(g.Point(0,859), g.Point(250,909))
+    q.setFill('red'), q.setOutline('black'), q.setWidth(3)
+    q_text = g.Text(q.getCenter(),'Quit')
+    q_text.setFace('arial'), q_text.setStyle('bold'), q_text.setSize(36), q_text.setFill('black')
+    q.draw(board), q_text.draw(board)
+
     #Show BINGO column labels
     title = ['B', 'I', 'N', 'G', 'O']
     for letter in title:
-
         x = 50 * title.index(letter)
         y = 56
 
@@ -103,25 +116,13 @@ def draw_game(board):
     for tile in tiles:
         tile.show(board)
 
-    # Generate and draw "Draw" and "Quit" buttons
-    d = g.Rectangle(g.Point(0,3), g.Point(250,53))
-    d.setFill('red'), d.setOutline('black'), d.setWidth(3)
-    d_text = g.Text(d.getCenter(),'Draw')
-    d_text.setFace('arial'), d_text.setStyle('bold'), d_text.setSize(36), d_text.setFill('black')
-    d.draw(board), d_text.draw(board)
-
-    q = g.Rectangle(g.Point(0,859), g.Point(250,909))
-    q.setFill('red'), q.setOutline('black'), q.setWidth(3)
-    q_text = g.Text(q.getCenter(),'Quit')
-    q_text.setFace('arial'), q_text.setStyle('bold'), q_text.setSize(36), q_text.setFill('black')
-    q.draw(board), q_text.draw(board)
-
     return tiles
 
-def winner(view):
+def winner():
+
     # Generate WINNER window and background colors
     # Black outer
-    b_win = g.GraphWin('WINNER: BIN"GO HART GO!!!"', 1000, 1000)
+    b_win = g.GraphWin('WINNER: BIN-"GO HART GO!!!"', 1000, 1000)
     b_win.setBackground('black')
     # Red middle
     r_r = g.Rectangle(g.Point(50,50), g.Point(950,950))
@@ -133,7 +134,7 @@ def winner(view):
     b_r = g.Rectangle(g.Point(150,150), g.Point(850,850))
     b_r.setFill('black'), b_r.draw(b_win)
     # Center Text
-    w_text = g.Text(b_r.getCenter(), "WINNER!")
+    w_text = g.Text(b_r.getCenter(), 'BIN-"GO HART GO!!"\nWINNER!')
     w_text.setFace('arial'), w_text.setStyle('bold'), w_text.setFill('red'), w_text.setSize(36), w_text.draw(b_win)
     # Window controls
     # "Play Again" box
@@ -148,17 +149,15 @@ def winner(view):
     q_txt.setFace('arial'), q_txt.setStyle('bold'), q_txt.setTextColor('black'), q_txt.setSize(12), q_txt.draw(b_win)
 
     # Wait for user to initiate click event
-    while True:
-        b_click = b_win.getMouse()
-
-        if b_click.getX() in range(650,751) and b_click.getY() in range(700,751):
-            b_win.close()
-        elif b_click.getX() in range(275,376) and b_click.getY() in range(700,751):
-            view.close()
+    while (b_win.mouseX == None or b_win.mouseY == None) and b_win.lastKey == '': # No mouse clicks, no key press
+        b_win.update()
+        g.time.sleep(.1) # give up thread
+        if b_win.mouseX != None and b_win.mouseY != None: # Mouse click in location (win.mouseX, win.mouseY)
+            if (b_win.mouseX >=275 and b_win.mouseX <= 376) and (b_win.mouseY >= 700 and b_win.mouseY <= 751):  # Inside the 'Play Again!' button
+                b_win.close()
+                return True
+            elif (b_win.mouseX >=650 and b_win.mouseX <= 751) and (b_win.mouseY >= 700 and b_win.mouseY <= 751): b_win.close()   # Inside the 'Quit!' button
+        elif b_win.lastKey.lower() == 'p':
             b_win.close()
             return True
-        else:
-            b_win.getMouse()
-
-
-
+        elif b_win.lastKey.lower() == 'q': b_win.close()
